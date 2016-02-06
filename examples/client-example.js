@@ -16,9 +16,6 @@ void function () {
 		assert(       config.clientHost,  'config.clientHost');
 		assert(Number(config.clientPort), 'config.clientPort');
 		assert(Number(config.clientPool), 'config.clientPool');
-		config = {clientHost:config.clientHost,
-		          clientPort:config.clientPort,
-		          clientPool:config.clientPool};
 
 		log.info(config);
 

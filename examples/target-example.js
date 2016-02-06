@@ -15,8 +15,6 @@ void function () {
 	configs.targets.forEach(function (config) {
 		assert(       config.targetName,  'config.targetName');
 		assert(Number(config.targetPort), 'config.targetPort');
-		config = {targetName:config.targetName,
-		          targetPort:config.targetPort};
 
 		log.info(config);
 

@@ -14,7 +14,6 @@ void function () {
 
 	configs.servers.forEach(function (config) {
 		assert(Number(config.serverPort), 'config.serverPort');
-		config = {serverPort: config.serverPort};
 
 		log.info(config);
 

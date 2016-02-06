@@ -18,9 +18,6 @@ void function () {
 		assert(       config.targetName,  'config.targetName');
 		assert(       config.targetHost,  'config.targetHost');
 		assert(Number(config.targetPort), 'config.targetPort');
-		config = {targetName:config.targetName,
-		          targetHost:config.targetHost,
-		          targetPort:config.targetPort};
 
 		log.info(config);
 
