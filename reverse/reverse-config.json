@@ -1,0 +1,15 @@
+{
+	"systemPort": 8009,
+	"serverHost": "localhost",
+	"serverPort": 8008,
+	"clients": [
+		{
+			"targetName": "target1",
+			"clientPort": 8001
+		},
+		{
+			"targetName": "target2",
+			"clientPort": 8002
+		}
+	]
+}
