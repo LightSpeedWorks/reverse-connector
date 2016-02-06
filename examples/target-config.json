@@ -1,10 +1,13 @@
-[
-	{
-		"targetName": "target1",
-		"targetPort": 9001
-	},
-	{
-		"targetName": "target2",
-		"targetPort": 9002
-	}
-]
+{
+	"logLevel": "trace",
+	"targets": [
+		{
+			"targetName": "target1",
+			"targetPort": 9001
+		},
+		{
+			"targetName": "target2",
+			"targetPort": 9002
+		}
+	]
+}

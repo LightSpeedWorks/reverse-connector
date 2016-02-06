@@ -4,17 +4,15 @@ void function () {
 	var assert = require('assert');
 	var path = require('path');
 	var net = require('net');
+	var log = require('log-manager').getLogger();
 
-	var x = process.argv[2] || '37';
-	x = '\x1b[' + x + 'm';
-	var y = '\x1b[m';
-	var basename = path.basename(__filename);
-	console.log(basename);
+	log.info('node', process.version, path.basename(__filename));
 	var configs = require('./client-config.json');
+	log.setLevel(configs.logLevel);
 
 	var clientId = 10000;
 
-	configs.forEach(function (config) {
+	configs.clients.forEach(function (config) {
 		assert(       config.clientHost,  'config.clientHost');
 		assert(Number(config.clientPort), 'config.clientPort');
 		assert(Number(config.clientPool), 'config.clientPool');
@@ -22,8 +20,7 @@ void function () {
 		          clientPort:config.clientPort,
 		          clientPool:config.clientPool};
 
-		console.log(x, new Date().toLocaleString(), basename, process.version, y);
-		console.log(config);
+		log.info(config);
 
 		var clientPoolSockets = [];
 
@@ -35,8 +32,7 @@ void function () {
 				return;
 
 			var c = net.connect(config.clientPort, config.clientHost, function connectionClient() {
-				console.log(x, new Date().toLocaleString(), basename,
-					'(client) using.', y);
+				log.debug('(client) using.');
 
 				var cNo = ++clientId;
 				c.write('example-client-message ' + cNo + ' - 1\r\n');
@@ -52,9 +48,8 @@ void function () {
 					var buff = c.read();
 					if (!buff) return;
 
-					console.log(x, new Date().toLocaleString(), basename,
-						'(client) read. ' + buff.toString().trim(), y);
-					//process.stdout.write(buff);
+					log.debug('(client) read.');
+					log.trace('(client) read. ' + buff.toString().trim());
 				});
 			});
 			clientPoolSockets.push(c);
@@ -63,14 +58,12 @@ void function () {
 			c.on('end', end);
 
 			function error(err) {
-				console.log(x, new Date().toLocaleString(), basename,
-					'(client) error', err, y);
+				log.warn('(client) error', err);
 				remove(err);
 			}
 
 			function end() {
-				console.log(x, new Date().toLocaleString(), basename,
-					'(client) disconnected. remain', clientPoolSockets.length, y);
+				log.debug('(client) disconnected. remain', clientPoolSockets.length);
 				remove();
 			}
 

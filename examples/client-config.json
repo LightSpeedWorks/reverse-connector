@@ -1,17 +1,20 @@
-[
-	{
-		"clientHost": "localhost",
-		"clientPort": 8001,
-		"clientPool": 1
-	},
-	{
-		"clientHost": "localhost",
-		"clientPort": 8002,
-		"clientPool": 1
-	},
-	{
-		"clientHost": "localhost",
-		"clientPort": 8009,
-		"clientPool": 1
-	}
-]
+{
+	"logLevel": "trace",
+	"clients": [
+		{
+			"clientHost": "localhost",
+			"clientPort": 8001,
+			"clientPool": 1
+		},
+		{
+			"clientHost": "localhost",
+			"clientPort": 8002,
+			"clientPool": 1
+		},
+		{
+			"clientHost": "localhost",
+			"clientPort": 8009,
+			"clientPool": 1
+		}
+	]
+}

@@ -4,23 +4,19 @@ void function () {
 	var assert = require('assert');
 	var path = require('path');
 	var net = require('net');
+	var log = require('log-manager').getLogger();
 
-	var x = process.argv[2] || '37';
-	x = '\x1b[' + x + 'm';
-	var y = '\x1b[m';
-	var basename = path.basename(__filename);
-	console.log(basename);
+	log.info('node', process.version, path.basename(__filename));
 	var configs = require('./reverse-config.json');
+	log.setLevel(configs.logLevel);
 
 	var systemPoolSockets = {};
 
 	assert(Number(configs.systemPort), 'config.systemPort');
 
 	var systemNetSvr = net.createServer(function connectionSystem(c) {
-
 		// connection listener
-		console.log(x, new Date().toLocaleString(), basename,
-			'(system) connected.', y);
+		log.debug('(system) connected.');
 
 		var using = false;
 		c.on('readable', function readable() {
@@ -29,18 +25,16 @@ void function () {
 
 			if (!using) {
 				var words;
-				if (buff[0] === 0x52 &&
-						(words = buff.toString().split(' '), words[0]) === 'REVERSE') {
+				if (buff[0] === 0x24 &&
+						(words = buff.toString().split(' '), words[0]) === '$REVERSE') {
 					var targetName = words[1];
 					if (systemPoolSockets[targetName]) {
 						systemPoolSockets[targetName].push(c);
-						console.log(x, new Date().toLocaleString(), basename,
-							'(system) connected. ' + targetName + ' remain ' +
-							systemPoolSockets[targetName].length, y);
+						log.debug('(system) connected. ' + targetName + ' remain ' +
+							systemPoolSockets[targetName].length);
 
 						c.on('error', function error(err) {
-							console.log(x, new Date().toLocaleString(), basename,
-								'(system) error', err, y);
+							log.warn('(system) error', err);
 							c.destroy();
 							remove();
 						});
@@ -48,8 +42,7 @@ void function () {
 						c.on('end', end);
 
 						function end() {
-							console.log(x, new Date().toLocaleString(), basename,
-								'(system) disconnected.', y);
+							log.debug('(system) disconnected.');
 							remove();
 						}
 
@@ -58,8 +51,7 @@ void function () {
 						}
 					}
 					else {
-						console.log(x, new Date().toLocaleString(), basename,
-							'(system) targetName ' + targetName + ' not found!', y);
+						log.warn('(system) targetName ' + targetName + ' not found!');
 						//c.write('wrong!!!\r\n');
 						c.destroy();
 					}
@@ -73,8 +65,7 @@ void function () {
 					});
 
 					s.on('error', function error(err) {
-						console.log(x, new Date().toLocaleString(), basename,
-							'(server) error', err, y);
+						log.warn('(server) error', err);
 						s.destroy(); // end?
 						c.destroy(); // end?
 					});
@@ -86,8 +77,7 @@ void function () {
 		});
 
 		c.on('error', function error(err) {
-			console.log(x, new Date().toLocaleString(), basename,
-				'(system) error', err, y);
+			log.warn('(system) error', err);
 			c.destroy();
 			//remove();
 		});
@@ -95,14 +85,12 @@ void function () {
 		c.on('end', end);
 
 		function end() {
-			console.log(x, new Date().toLocaleString(), basename,
-				'(system) disconnected. (1)', y);
+			log.debug('(system) disconnected. (1)');
 		}
 
 	}).listen(configs.systemPort, function() {
 		// listening listener
-		console.log(x, new Date().toLocaleString(), basename,
-			'(system) server bound. port', configs.systemPort, y);
+		log.info('(system) server bound. port', configs.systemPort);
 	});
 
 	configs.clients.forEach(function (config) {
@@ -112,38 +100,31 @@ void function () {
 
 		systemPoolSockets[config.targetName] = [];
 
-		console.log(x, new Date().toLocaleString(), basename, process.version, y);
-		console.log(config);
+		log.info(config);
 
 		var clientNetSvr = net.createServer(function connectionClient(c) {
 			var s, a = systemPoolSockets[config.targetName];
 			if (!a || !(a instanceof Array) || !(s = a.shift())) {
-				console.log(x, new Date().toLocaleString(), basename,
-					'(client) no pool, connection rejected!', y);
+				log.warn('(client) no pool, connection rejected!');
 				return c.destroy();
 			}
 
 			// connection listener
-			console.log(x, new Date().toLocaleString(), basename,
-				'(client) client connected. remain', systemPoolSockets[config.targetName].length, y);
+			log.debug('(client) client connected. remain', systemPoolSockets[config.targetName].length);
 			c.on('error', function (err) {
-				console.log(x, new Date().toLocaleString(), basename,
-					'(client) error', err, y);
+				log.warn('(client) error', err);
 			});
 			c.on('end', function() {
-				console.log(x, new Date().toLocaleString(), basename,
-					'(client) disconnected', y);
+				log.debug('(client) disconnected');
 			});
 			s.on('end', function() {
-				console.log(x, new Date().toLocaleString(), basename,
-					'(client) system disconnected', y);
+				log.debug('(client) system disconnected');
 			});
 			c.pipe(s);
 			s.pipe(c);
 		}).listen(config.clientPort, function() {
 			// listening listener
-			console.log(x, new Date().toLocaleString(), basename,
-				'(client) server bound. port', config.clientPort, y);
+			log.info('(client) server bound. port', config.clientPort);
 		});
 
 	}); // configs.forEach

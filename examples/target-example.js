@@ -4,39 +4,35 @@ void function () {
 	var assert = require('assert');
 	var path = require('path');
 	var net = require('net');
+	var log = require('log-manager').getLogger();
 
-	var x = process.argv[2] || '37';
-	x = '\x1b[' + x + 'm';
-	var y = '\x1b[m';
-	var basename = path.basename(__filename);
-	console.log(basename);
+	log.info('node', process.version, path.basename(__filename));
 	var configs = require('./target-config.json');
+	log.setLevel(configs.logLevel);
 
 	var targetId = 20000;
 
-	configs.forEach(function (config) {
+	configs.targets.forEach(function (config) {
 		assert(       config.targetName,  'config.targetName');
 		assert(Number(config.targetPort), 'config.targetPort');
 		config = {targetName:config.targetName,
 		          targetPort:config.targetPort};
 
-		console.log(x, new Date().toLocaleString(), basename, process.version, y);
-		console.log(config);
+		log.info(config);
 
 		var targetNetSvr = net.createServer(function connectionTarget(c) {
-			// connection listener
-			console.log(x, new Date().toLocaleString(), basename,
-				'(target) connected.', y);
-			c.on('end', function() {
-				console.log(x, new Date().toLocaleString(), basename,
-					'(target) disconnected', y);
+			log.debug('(target) connected.');
+			c.on('error', function error(err) {
+				log.warn('(target) error', err);
+				c.destroy();
+			});
+			c.on('end', function end() {
+				log.debug('(target) disconnected');
 			});
 			c.write('example-target-message ' + (++targetId) + ' ' + config.targetName + '\r\n');
 			c.pipe(c);
-		}).listen(config.targetPort, function() {
-			// listening listener
-			console.log(x, new Date().toLocaleString(), basename,
-				'(target) server bound. port', config.targetPort, y);
+		}).listen(config.targetPort, function listeningTarget() {
+			log.info('(target) server bound. port', config.targetPort);
 		});
 
 	}); // configs.forEach

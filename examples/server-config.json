@@ -1,5 +1,8 @@
-[
-	{
-		"serverPort": 8008
-	}
-]
+{
+	"logLevel": "trace",
+	"servers": [
+		{
+			"serverPort": 8008
+		}
+	]
+}

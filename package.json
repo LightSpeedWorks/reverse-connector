@@ -1,0 +1,24 @@
+{
+  "name": "reverse-connector",
+  "version": "0.0.0",
+  "description": "reverse connector",
+  "main": "index.js",
+  "dependencies": [],
+  "keywords": [
+    "reverse",
+    "proxy"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "LightSpeedWorks/reverse-connector"
+  },
+  "bugs": {
+    "url": "https://github.com/LightSpeedWorks/reverse-connector/issues"
+  },
+  "homepage": "https://github.com/LightSpeedWorks/reverse-connector#readme",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "LightSpeedC",
+  "license": "MIT"
+}

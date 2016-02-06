@@ -1,4 +1,5 @@
 {
+	"logLevel": "trace",
 	"systemPort": 8009,
 	"serverHost": "localhost",
 	"serverPort": 8008,

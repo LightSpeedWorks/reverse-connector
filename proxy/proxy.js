@@ -4,13 +4,11 @@ void function () {
 	var assert = require('assert');
 	var path = require('path');
 	var net = require('net');
+	var log = require('log-manager').getLogger();
 
-	var x = process.argv[2] || '37';
-	x = '\x1b[' + x + 'm';
-	var y = '\x1b[m';
-	var basename = path.basename(__filename);
-	console.log(basename);
+	log.info('node', process.version, path.basename(__filename));
 	var configs = require('./proxy-config.json');
+	log.setLevel(configs.logLevel);
 
 	assert(       configs.systemHost,  'configs.systemHost');
 	assert(Number(configs.systemPort), 'configs.systemPort');
@@ -24,8 +22,7 @@ void function () {
 		          targetHost:config.targetHost,
 		          targetPort:config.targetPort};
 
-		console.log(x, new Date().toLocaleString(), basename, process.version, y);
-		console.log(config);
+		log.info(config);
 
 		var systemPoolSockets = [];
 
@@ -39,10 +36,9 @@ void function () {
 			var using = false;
 
 			var c = net.connect(configs.systemPort, configs.systemHost, function connectionSystem() {
-				console.log(x, new Date().toLocaleString(), basename,
-					'(system) connected.', y);
+				log.debug('(system) connected.');
 
-				c.write('REVERSE ' + config.targetName + ' HTTP/1.0\r\n\r\n');
+				c.write('$REVERSE ' + config.targetName + ' HTTP/1.0\r\n\r\n');
 
 				// c.removeListers('error');
 				c.on('readable', function () {
@@ -50,31 +46,26 @@ void function () {
 					if (!buff) return;
 
 					if (!using) {
-						console.log(x, new Date().toLocaleString(), basename,
-							'(system) using.', y);
+						log.debug('(system) using.');
 
 						remove();
 
 						var s = net.connect(config.targetPort, config.targetHost, function connectionTarget() {
-							console.log(x, new Date().toLocaleString(), basename,
-								'(target) connected.', y);
+							log.debug('(target) connected.');
 							s.pipe(c);
 						});
 						s.on('error', error);
 						s.on('end', function end() {
-							console.log(x, new Date().toLocaleString(), basename,
-								'(target) disconnected.', y);
+							log.debug('(target) disconnected.');
 							// c.end();
 						});
 						c.on('end', function end() {
-							console.log(x, new Date().toLocaleString(), basename,
-								'(system) disconnected.', y);
+							log.debug('(system) disconnected.');
 							s.end();
 						});
 
 						function error(err) {
-							console.log(x, new Date().toLocaleString(), basename,
-								'(target) error', err, y);
+							log.warn('(target) error', err);
 						}
 
 						using = true;
@@ -83,8 +74,7 @@ void function () {
 					if (s)
 						s.write(buff);
 					else {
-						console.log(x, new Date().toLocaleString(), basename,
-							'(system) not enough! system pool.', y);
+						log.warn('(system) not enough! system pool.');
 						c.end();
 					}
 
@@ -96,25 +86,25 @@ void function () {
 			c.on('end', end);
 
 			function error(err) {
-				console.log(x, new Date().toLocaleString(), basename,
-					'(system) error', err, y);
+				log.warn('(system) error', err);
 				remove(err);
 			}
 
 			function end() {
-				console.log(x, new Date().toLocaleString(), basename,
-					'(system) disconnected. remain', systemPoolSockets.length, y);
+				log.debug('(system) disconnected. remain', systemPoolSockets.length);
 				//setTimeout(remove, 1000);
 				remove();
 			}
 
 			function remove(err) {
 				systemPoolSockets = systemPoolSockets.filter(s => s !== c);
-				if (err && err.code === 'ECONNREFUSED')
+				if (err && (
+						err.code === 'ECONNREFUSED' ||
+						err.code === 'EPIPE' ||
+						err.code === 'ECONNRESET'))
 					setTimeout(connectPool, 5 * 1000); // 5 sec
 				else
-					setTimeout(connectPool, 1 * 1000); // 1 sec
-					//connectPool();
+					setTimeout(connectPool, 1000); // 1 sec
 			}
 
 		}
