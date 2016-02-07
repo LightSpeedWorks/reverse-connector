@@ -1,0 +1,18 @@
+{
+	"logLevel": "info",
+	"systemHost": "localhost",
+	"systemPort": 8009,
+	"systemPool": 10,
+	"targets": [
+		{
+			"targetName": "target1",
+			"targetHost": "localhost",
+			"targetPort": 9001
+		},
+		{
+			"targetName": "target2",
+			"targetHost": "localhost",
+			"targetPort": 9002
+		}
+	]
+}

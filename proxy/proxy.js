@@ -12,108 +12,130 @@ void function () {
 	var configs = require('./proxy-config.json');
 	log.setLevel(configs.logLevel);
 
-	assert(       configs.systemHost,  'configs.systemHost');
-	assert(Number(configs.systemPort), 'configs.systemPort');
-	assert(Number(configs.systemPool), 'configs.systemPool');
+	var systemPoolSockets = {};
+
+	assert(Number(configs.systemPort), 'config.systemPort');
 
 	var myName = '(proxy)';
 	var countUp = startStatistics(log, myName).countUp;
 
-	configs.targets.forEach(function (config) {
+	var systemNetSvr = net.createServer(
+			{allowHalfOpen:true},
+			function connectionSystem(c) {
+		log.debug('(system) connected.');
+
+		var using = false;
+		c.on('readable', function readable() {
+			var buff = c.read();
+			if (!buff) return;
+
+			if (!using) {
+				var words;
+				if (buff[0] === 0x24 &&
+						(words = buff.toString().split(' '), words[0]) === '$REVERSE') {
+					var targetName = words[1];
+					if (systemPoolSockets[targetName]) {
+						systemPoolSockets[targetName].push(c);
+						log.debug('(system) connected. ' + targetName + ' remain ' +
+							systemPoolSockets[targetName].length);
+
+						c.on('error', function error(err) {
+							log.warn('(system) error', err);
+							c.destroy();
+							remove();
+						});
+
+						c.on('end', end);
+
+						function end() {
+							log.debug('(system) disconnected.');
+							remove();
+						}
+
+						function remove() {
+							systemPoolSockets[targetName] = systemPoolSockets[targetName].filter(s => s !== c);
+						}
+					}
+					else {
+						log.warn('(system) targetName ' + targetName + ' not found!');
+						//c.write('wrong!!!\r\n');
+						c.destroy();
+					}
+
+				}
+				else {
+					var s = net.connect(
+							{port:configs.serverPort, host:configs.serverHost, allowHalfOpen:true},
+							function connectionServer() {
+						s.write(buff);
+						c.pipe(s);
+						s.pipe(c);
+					});
+
+					s.on('error', function error(err) {
+						log.warn('(server) error', err);
+						s.destroy(); // end?
+						c.destroy(); // end?
+					});
+				} // if REVERSE
+
+				c.removeListener('readable', readable);
+				using = true;
+			}
+		});
+
+		c.on('error', function error(err) {
+			log.warn('(system) error', err);
+			c.destroy();
+			//remove();
+		});
+
+		c.on('end', end);
+
+		function end() {
+			log.debug('(system) disconnected. (1)');
+		}
+
+	}).listen(configs.systemPort, function() {
+		// listening listener
+		log.info('(system) server bound. port', configs.systemPort);
+	});
+
+	configs.clients.forEach(function (config) {
 		assert(       config.targetName,  'config.targetName');
-		assert(       config.targetHost,  'config.targetHost');
-		assert(Number(config.targetPort), 'config.targetPort');
+		assert(Number(config.clientPort), 'config.clientPort');
+
+		systemPoolSockets[config.targetName] = [];
 
 		log.info(config);
 
-		var systemPoolSockets = [];
+		var clientNetSvr = net.createServer(
+				{allowHalfOpen:true},
+				function connectionClient(c) {
+			var s, a = systemPoolSockets[config.targetName];
+			if (!a || !(a instanceof Array) || !(s = a.shift())) {
+				log.warn('(client) no pool, connection rejected!');
+				return c.destroy();
+			}
 
-		while (systemPoolSockets.length < configs.systemPool)
-			connectPool();
-
-		function connectPool() {
-			if (systemPoolSockets.length >= configs.systemPool)
-				return;
-
-			var using = false;
-
-			var c = net.connect(
-					{port:configs.systemPort, host:configs.systemHost, allowHalfOpen:true},
-					function connectionSystem() {
-				log.debug('(system) connected.');
-
-				c.write('$REVERSE ' + config.targetName + ' HTTP/1.0\r\n\r\n');
-
-				// c.removeListers('error');
-				c.on('readable', function readable() {
-					var buff = c.read();
-					if (!buff) return;
-
-					if (!using) {
-						log.debug('(system) using.');
-
-						remove();
-
-						var s = net.connect(
-								{port:config.targetPort, host:config.targetHost, allowHalfOpen:true},
-								function connectionTarget() {
-							log.debug('(target) connected.');
-							s.pipe(c);
-						});
-						s.on('error', error);
-						s.on('end', function end() {
-							log.debug('(target) disconnected.');
-							// c.end();
-						});
-						c.on('end', function end() {
-							log.debug('(system) disconnected.');
-							s.end();
-							countUp();
-						});
-
-						function error(err) {
-							log.warn('(target) error', err);
-						}
-
-						using = true;
-					}
-
-					if (s)
-						s.write(buff);
-					else {
-						log.warn('(system) not enough! system pool.');
-						c.end();
-					}
-
-				});
+			// connection listener
+			log.debug('(client) client connected. remain', systemPoolSockets[config.targetName].length);
+			c.on('error', function (err) {
+				log.warn('(client) error', err);
+				c.destroy();
 			});
-			systemPoolSockets.push(c);
-
-			c.on('error', error);
-			c.on('end', end);
-
-			function error(err) {
-				log.warn('(system) error', err);
-				remove(err);
-			}
-
-			function end() {
-				log.debug('(system) disconnected. remain', systemPoolSockets.length);
-				remove();
-			}
-
-			function remove(err) {
-				systemPoolSockets = systemPoolSockets.filter(s => s !== c);
-				if (err && (
-						err.code === 'ECONNREFUSED' ||
-						err.code === 'EPIPE' ||
-						err.code === 'ECONNRESET'))
-					setTimeout(connectPool, 5 * 1000); // 5 sec
-				else
-					setTimeout(connectPool, 1000); // 1 sec
-			}
-
-		}
+			c.on('end', function() {
+				log.debug('(client) disconnected');
+				countUp();
+			});
+			s.on('end', function() {
+				log.debug('(client) system disconnected');
+			});
+			c.pipe(s);
+			s.pipe(c);
+		}).listen(config.clientPort, function listeningClient() {
+			log.info('(client) server bound. port', config.clientPort);
+		});
 
 	}); // configs.forEach
 
