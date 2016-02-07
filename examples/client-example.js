@@ -5,6 +5,7 @@ void function () {
 	var path = require('path');
 	var net = require('net');
 	var log = require('log-manager').getLogger();
+	var startStatistics = require('../lib/start-statistics');
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
@@ -12,6 +13,8 @@ void function () {
 	log.setLevel(configs.logLevel);
 
 	var clientId = 10000;
+	var myName = '(client)';
+	var countUp = startStatistics(log, myName).countUp;
 
 	configs.clients.forEach(function (config) {
 		assert(       config.clientHost,  'config.clientHost');
@@ -37,16 +40,16 @@ void function () {
 			var c = net.connect(
 					{port:config.clientPort, host:config.clientHost, allowHalfOpen:true},
 					function connectionClient() {
-				log.debug('(client) using.');
+				log.debug(myName, 'using.');
 				connected = true;
 
 				var cNo = ++clientId;
 				c.write('CALC ' + cNo + ' ' + a + '+' + b + '\r\n');
-				log.trace('(client) write. CALC', cNo, a + '+' + b, config.clientPort);
+				log.trace(myName, 'write. CALC', cNo, a + '+' + b, config.clientPort);
 				c.end();
 				setTimeout(function () {
 					if (!returned) {
-						log.warn('(client) server not respond!');
+						log.warn(myName, 'server not respond!');
 						c.destroy();
 						remove();
 					}
@@ -59,23 +62,24 @@ void function () {
 				if (!buff) return;
 				returned = true;
 
-				log.debug('(client) read.');
-				log.trace('(client) read. ' + (a+b) + ' = ' + buff.toString().trim());
+				log.debug(myName, 'read.');
+				log.trace(myName, 'read. ' + (a+b) + ' = ' + buff.toString().trim());
+				countUp();
 			});
 
 			c.on('error', error);
 			c.on('end', end);
 
 			function error(err) {
-				log.warn('(client) error', err);
+				log.warn(myName, 'error', err);
 				c.destroy();
 				remove(err);
 			}
 
 			function end() {
-				log.debug('(client) disconnected. remain', clientPoolSockets.length);
-				if (!connected) log.warn('(client) can not connect!');
-				else if (!returned) log.warn('(client) server down!');
+				log.debug(myName, 'disconnected. remain', clientPoolSockets.length);
+				if (!connected) log.warn(myName, 'can not connect!');
+				else if (!returned) log.warn(myName, 'server down!');
 				disconnected = true;
 				remove();
 			}
@@ -88,7 +92,7 @@ void function () {
 						err.code === 'ECONNRESET'))
 					setTimeout(connectPool, 10 * 1000); // 10 sec
 				else
-					setTimeout(connectPool, 2 * 1000); // 2 sec
+					setTimeout(connectPool, 500); // 0.5 sec
 			}
 
 		}

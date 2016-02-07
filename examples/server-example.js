@@ -49,7 +49,7 @@ void function () {
 					c.write('RESULT-SERVER ' + words[1] + ' ' + words[2] + '=' + eval(words[2]) + '\r\n');
 					c.end();
 					countUp();
-				}, 2000);
+				}, 1000);
 			});
 		}).listen(config.serverPort, function listeningServer() {
 			log.debug(myName, 'server bound. port', config.serverPort);

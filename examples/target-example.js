@@ -14,7 +14,6 @@ void function () {
 
 	var targetId = 20000;
 	var myName = '(target)';
-
 	var countUp = startStatistics(log, myName).countUp;
 
 	configs.targets.forEach(function (config) {
@@ -50,7 +49,7 @@ void function () {
 					c.write('RESULT-TARGET ' + words[1] + ' ' + words[2] + '=' + eval(words[2]) + '\r\n');
 					c.end();
 					countUp();
-				}, 2000);
+				}, 1000);
 			});
 		}).listen(config.targetPort, function listeningTarget() {
 			log.info(myName, 'server bound. port', config.targetPort);
