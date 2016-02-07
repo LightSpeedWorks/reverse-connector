@@ -1,13 +1,23 @@
 reverse-connector
 ====
 
+reverse connector.
+
+
+## Client side:
 
 ```
 $ node reverse &
-$ node proxy &
 ```
 
 reverse-config.json
+
+
+## Server side:
+
+```
+$ node proxy &
+```
 
 proxy-config.json
 
