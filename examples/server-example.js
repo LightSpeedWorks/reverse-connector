@@ -17,7 +17,9 @@ void function () {
 
 		log.info(config);
 
-		var serverNetSvr = net.createServer(function connectionTarget(c) {
+		var serverNetSvr = net.createServer(
+				{allowHalfOpen:true},
+				function connectionTarget(c) {
 			log.debug('(server) connected.');
 			c.on('error', function error(err) {
 				log.warn('(server) error', err);
@@ -26,9 +28,17 @@ void function () {
 			c.on('end', function end() {
 				log.debug('(server) disconnected');
 			});
-			c.write('example-server-message ' + (++serverId) + ' - Z\r\n');
-			c.pipe(c);
-		}).listen(config.serverPort, function listening() {
+			c.on('readable', function () {
+				var buff = c.read();
+				if (!buff) return;
+				var words = buff.toString().trim().split(' ');
+				log.trace('(server) read.', words.join(' '));
+				c.write('RESULT-SERVER ' + words[1] + ' ' + words[2] + '=' + eval(words[2]) + '\r\n');
+				c.end();
+			});
+			//c.write('example-server-message ' + (++serverId) + ' - Z\r\n');
+			//c.pipe(c);
+		}).listen(config.serverPort, function listeningServer() {
 			log.debug('(server) server bound. port', config.serverPort);
 		});
 

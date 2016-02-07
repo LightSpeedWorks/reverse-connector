@@ -28,39 +28,54 @@ void function () {
 			if (clientPoolSockets.length >= config.clientPool)
 				return;
 
-			var c = net.connect(config.clientPort, config.clientHost, function connectionClient() {
+			var a = Math.floor(Math.random() * 9) + 1;
+			var b = Math.floor(Math.random() * 9) + 1;
+			var connected = false;
+			var returned = false;
+			var disconnected = false;
+			var c = net.connect(
+					{port:config.clientPort, host:config.clientHost, allowHalfOpen:true},
+					function connectionClient() {
 				log.debug('(client) using.');
+				connected = true;
 
 				var cNo = ++clientId;
-				c.write('example-client-message ' + cNo + ' - 1\r\n');
+				c.write('CALC ' + cNo + ' ' + a + '+' + b + '\r\n');
+				log.trace('(client) write. CALC', cNo, a + '+' + b, config.clientPort);
+				c.end();
 				setTimeout(function () {
-					c.write('example-client-message ' + cNo + ' - 2\r\n');
-				}, 1000);
-				setTimeout(function () {
-					c.end();
-					remove();
-				}, 3000);
-
-				c.on('readable', function () {
-					var buff = c.read();
-					if (!buff) return;
-
-					log.debug('(client) read.');
-					log.trace('(client) read. ' + buff.toString().trim());
-				});
+					if (!returned) {
+						log.warn('(client) server not respond!');
+						c.destroy();
+						remove();
+					}
+				}, 3000); // must response in 3 sec
 			});
 			clientPoolSockets.push(c);
+
+			c.on('readable', function readable() {
+				var buff = c.read();
+				if (!buff) return;
+				returned = true;
+
+				log.debug('(client) read.');
+				log.trace('(client) read. ' + (a+b) + ' = ' + buff.toString().trim());
+			});
 
 			c.on('error', error);
 			c.on('end', end);
 
 			function error(err) {
 				log.warn('(client) error', err);
+				c.destroy();
 				remove(err);
 			}
 
 			function end() {
 				log.debug('(client) disconnected. remain', clientPoolSockets.length);
+				if (!connected) log.warn('(client) can not connect!');
+				else if (!returned) log.warn('(client) server down!');
+				disconnected = true;
 				remove();
 			}
 
@@ -72,7 +87,7 @@ void function () {
 						err.code === 'ECONNRESET'))
 					setTimeout(connectPool, 10 * 1000); // 10 sec
 				else
-					setTimeout(connectPool, 1000); // 1 sec
+					setTimeout(connectPool, 2 * 1000); // 2 sec
 			}
 
 		}

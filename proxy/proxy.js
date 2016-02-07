@@ -32,13 +32,15 @@ void function () {
 
 			var using = false;
 
-			var c = net.connect(configs.systemPort, configs.systemHost, function connectionSystem() {
+			var c = net.connect(
+					{port:configs.systemPort, host:configs.systemHost, allowHalfOpen:true},
+					function connectionSystem() {
 				log.debug('(system) connected.');
 
 				c.write('$REVERSE ' + config.targetName + ' HTTP/1.0\r\n\r\n');
 
 				// c.removeListers('error');
-				c.on('readable', function () {
+				c.on('readable', function readable() {
 					var buff = c.read();
 					if (!buff) return;
 

@@ -14,8 +14,9 @@ void function () {
 
 	assert(Number(configs.systemPort), 'config.systemPort');
 
-	var systemNetSvr = net.createServer(function connectionSystem(c) {
-		// connection listener
+	var systemNetSvr = net.createServer(
+			{allowHalfOpen:true},
+			function connectionSystem(c) {
 		log.debug('(system) connected.');
 
 		var using = false;
@@ -58,7 +59,9 @@ void function () {
 
 				}
 				else {
-					var s = net.connect(configs.serverPort, configs.serverHost, function connectionServer() {
+					var s = net.connect(
+							{port:configs.serverPort, host:configs.serverHost, allowHalfOpen:true},
+							function connectionServer() {
 						s.write(buff);
 						c.pipe(s);
 						s.pipe(c);
@@ -96,13 +99,14 @@ void function () {
 	configs.clients.forEach(function (config) {
 		assert(       config.targetName,  'config.targetName');
 		assert(Number(config.clientPort), 'config.clientPort');
-		config = {targetName:config.targetName, clientPort:config.clientPort, systemPort:configs.systemPort};
 
 		systemPoolSockets[config.targetName] = [];
 
 		log.info(config);
 
-		var clientNetSvr = net.createServer(function connectionClient(c) {
+		var clientNetSvr = net.createServer(
+				{allowHalfOpen:true},
+				function connectionClient(c) {
 			var s, a = systemPoolSockets[config.targetName];
 			if (!a || !(a instanceof Array) || !(s = a.shift())) {
 				log.warn('(client) no pool, connection rejected!');
@@ -113,6 +117,7 @@ void function () {
 			log.debug('(client) client connected. remain', systemPoolSockets[config.targetName].length);
 			c.on('error', function (err) {
 				log.warn('(client) error', err);
+				c.destroy();
 			});
 			c.on('end', function() {
 				log.debug('(client) disconnected');
@@ -122,8 +127,7 @@ void function () {
 			});
 			c.pipe(s);
 			s.pipe(c);
-		}).listen(config.clientPort, function() {
-			// listening listener
+		}).listen(config.clientPort, function listeningClient() {
 			log.info('(client) server bound. port', config.clientPort);
 		});
 
