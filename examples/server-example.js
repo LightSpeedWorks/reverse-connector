@@ -7,10 +7,12 @@ void function () {
 	var log = require('log-manager').getLogger();
 
 	log.info('node', process.version, path.basename(__filename));
+	process.title = path.basename(__filename);
 	var configs = require('./server-config.json');
 	log.setLevel(configs.logLevel);
 
 	var serverId = 30000;
+	var myName = '(server)';
 
 	configs.servers.forEach(function (config) {
 		assert(Number(config.serverPort), 'config.serverPort');
@@ -20,26 +22,33 @@ void function () {
 		var serverNetSvr = net.createServer(
 				{allowHalfOpen:true},
 				function connectionTarget(c) {
-			log.debug('(server) connected.');
+			log.debug(myName, 'connected.');
+			var receivied = false;
 			c.on('error', function error(err) {
-				log.warn('(server) error', err);
+				log.warn(myName, 'error', err);
 				c.destroy();
 			});
 			c.on('end', function end() {
-				log.debug('(server) disconnected');
+				log.debug(myName, 'disconnected');
+				if (!receivied) {
+					log.warn(myName, 'client has gone!');
+				}
 			});
 			c.on('readable', function () {
 				var buff = c.read();
 				if (!buff) return;
+
+				receivied = true;
 				var words = buff.toString().trim().split(' ');
-				log.trace('(server) read.', words.join(' '));
-				c.write('RESULT-SERVER ' + words[1] + ' ' + words[2] + '=' + eval(words[2]) + '\r\n');
-				c.end();
+				log.trace(myName, 'read.', words.join(' '));
+				setTimeout(function () {
+					log.trace(myName, 'write.', words.join(' '));
+					c.write('RESULT-SERVER ' + words[1] + ' ' + words[2] + '=' + eval(words[2]) + '\r\n');
+					c.end();
+				}, 2000);
 			});
-			//c.write('example-server-message ' + (++serverId) + ' - Z\r\n');
-			//c.pipe(c);
 		}).listen(config.serverPort, function listeningServer() {
-			log.debug('(server) server bound. port', config.serverPort);
+			log.debug(myName, 'server bound. port', config.serverPort);
 		});
 
 	}); // configs.forEach

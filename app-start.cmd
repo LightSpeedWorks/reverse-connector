@@ -1,3 +1,4 @@
+@node -p '\x1b[41m' & cls
 @start examples\target-example
 @timeout /t 1 /nobreak > nul
 @start examples\server-example

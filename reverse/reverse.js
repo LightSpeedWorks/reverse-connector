@@ -7,6 +7,7 @@ void function () {
 	var log = require('log-manager').getLogger();
 
 	log.info('node', process.version, path.basename(__filename));
+	process.title = path.basename(__filename);
 	var configs = require('./reverse-config.json');
 	log.setLevel(configs.logLevel);
 

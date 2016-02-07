@@ -2,7 +2,7 @@
 	"logLevel": "trace",
 	"systemHost": "localhost",
 	"systemPort": 8009,
-	"systemPool": 3,
+	"systemPool": 10,
 	"targets": [
 		{
 			"targetName": "target1",
