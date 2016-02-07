@@ -5,6 +5,7 @@ void function () {
 	var path = require('path');
 	var net = require('net');
 	var log = require('log-manager').getLogger();
+	var startStatistics = require('../lib/start-statistics');
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
@@ -14,6 +15,9 @@ void function () {
 	var systemPoolSockets = {};
 
 	assert(Number(configs.systemPort), 'config.systemPort');
+
+	var myName = '(reverse)';
+	var countUp = startStatistics(log, myName).countUp;
 
 	var systemNetSvr = net.createServer(
 			{allowHalfOpen:true},
@@ -122,6 +126,7 @@ void function () {
 			});
 			c.on('end', function() {
 				log.debug('(client) disconnected');
+				countUp();
 			});
 			s.on('end', function() {
 				log.debug('(client) system disconnected');

@@ -5,6 +5,7 @@ void function () {
 	var path = require('path');
 	var net = require('net');
 	var log = require('log-manager').getLogger();
+	var startStatistics = require('../lib/start-statistics');
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
@@ -14,6 +15,9 @@ void function () {
 	assert(       configs.systemHost,  'configs.systemHost');
 	assert(Number(configs.systemPort), 'configs.systemPort');
 	assert(Number(configs.systemPool), 'configs.systemPool');
+
+	var myName = '(proxy)';
+	var countUp = startStatistics(log, myName).countUp;
 
 	configs.targets.forEach(function (config) {
 		assert(       config.targetName,  'config.targetName');
@@ -50,7 +54,9 @@ void function () {
 
 						remove();
 
-						var s = net.connect(config.targetPort, config.targetHost, function connectionTarget() {
+						var s = net.connect(
+								{port:config.targetPort, host:config.targetHost, allowHalfOpen:true},
+								function connectionTarget() {
 							log.debug('(target) connected.');
 							s.pipe(c);
 						});
@@ -62,6 +68,7 @@ void function () {
 						c.on('end', function end() {
 							log.debug('(system) disconnected.');
 							s.end();
+							countUp();
 						});
 
 						function error(err) {
@@ -92,7 +99,6 @@ void function () {
 
 			function end() {
 				log.debug('(system) disconnected. remain', systemPoolSockets.length);
-				//setTimeout(remove, 1000);
 				remove();
 			}
 

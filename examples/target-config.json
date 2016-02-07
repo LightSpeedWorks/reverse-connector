@@ -1,5 +1,5 @@
 {
-	"logLevel": "trace",
+	"logLevel": "info",
 	"targets": [
 		{
 			"targetName": "target1",
