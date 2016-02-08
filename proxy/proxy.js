@@ -13,6 +13,7 @@ void function () {
 	log.setLevel(configs.logLevel);
 
 	var systemPoolSockets = {};
+	var clientPendingSockets = {};
 
 	assert(Number(configs.systemPort), 'config.systemPort');
 
@@ -23,6 +24,9 @@ void function () {
 			{allowHalfOpen:true},
 			function connectionSystem(c) {
 		log.debug('(system) connected.');
+
+		c.on('error', error);
+		c.on('end', end);
 
 		var using = false;
 		c.on('readable', function readable() {
@@ -35,6 +39,16 @@ void function () {
 						(words = buff.toString().split(' '), words[0]) === '$REVERSE') {
 					var targetName = words[1];
 					if (systemPoolSockets[targetName]) {
+
+						var s = clientPendingSockets[targetName] && clientPendingSockets[targetName].shift();
+						if (s) {
+							log.info('(client) wait connection connected!');
+							c.pipe(s);
+							s.pipe(c);
+							remove();
+							return;
+						}
+
 						systemPoolSockets[targetName].push(c);
 						log.debug('(system) connected. ' + targetName + ' remain ' +
 							systemPoolSockets[targetName].length);
@@ -84,51 +98,61 @@ void function () {
 			}
 		});
 
-		c.on('error', function error(err) {
+		function error(err) {
 			log.warn('(system) error', err);
 			c.destroy();
-			//remove();
-		});
-
-		c.on('end', end);
+		}
 
 		function end() {
 			log.debug('(system) disconnected. (1)');
 		}
 
-	}).listen(configs.systemPort, function() {
-		// listening listener
+	}).listen(configs.systemPort, function listeningSystem() {
 		log.info('(system) server bound. port', configs.systemPort);
 	});
 
 	configs.clients.forEach(function (config) {
 		assert(       config.targetName,  'config.targetName');
 		assert(Number(config.clientPort), 'config.clientPort');
+		var targetName = config.targetName;
 
-		systemPoolSockets[config.targetName] = [];
+		systemPoolSockets[targetName] = [];
+		clientPendingSockets[targetName] = [];
 
 		log.info(config);
 
 		var clientNetSvr = net.createServer(
 				{allowHalfOpen:true},
 				function connectionClient(c) {
-			var s, a = systemPoolSockets[config.targetName];
-			if (!a || !(a instanceof Array) || !(s = a.shift())) {
-				log.warn('(client) no pool, connection rejected!');
-				return c.destroy();
-			}
 
-			// connection listener
-			log.debug('(client) client connected. remain', systemPoolSockets[config.targetName].length);
-			c.on('error', function (err) {
+			log.debug('(client) client connected. remain', systemPoolSockets[targetName].length);
+
+			c.on('error', function error(err) {
 				log.warn('(client) error', err);
 				c.destroy();
 			});
-			c.on('end', function() {
+			c.on('end', function end() {
 				log.debug('(client) disconnected');
 				countUp();
 			});
-			s.on('end', function() {
+
+			var s = systemPoolSockets[targetName].shift();
+			if (!s) {
+				log.info('(client) no pool, connection wait!');
+				clientPendingSockets[targetName].push(c);
+				setTimeout(function () {
+					clientPendingSockets[targetName] = clientPendingSockets[targetName].filter(function (s) {
+						if (s === c) {
+							log.warn('(client) no pool, connection rejected!');
+							c.destroy();
+						}
+						return s !== c;
+					});
+				}, 1000);
+				return;
+			}
+
+			s.on('end', function end() {
 				log.debug('(client) system disconnected');
 			});
 			c.pipe(s);

@@ -53,13 +53,15 @@ void function () {
 						log.debug('(system) using.');
 
 						remove();
+						c.removeListener('readable', readable);
 
 						var s = net.connect(
 								{port:config.targetPort, host:config.targetHost, allowHalfOpen:true},
 								function connectionTarget() {
 							log.debug('(target) connected.');
-							s.pipe(c);
 						});
+						s.pipe(c);
+						c.pipe(s);
 						s.on('error', error);
 						s.on('end', function end() {
 							log.debug('(target) disconnected.');
@@ -67,7 +69,7 @@ void function () {
 						});
 						c.on('end', function end() {
 							log.debug('(system) disconnected.');
-							s.end();
+							//s.end();///
 							countUp();
 						});
 
@@ -110,7 +112,7 @@ void function () {
 						err.code === 'ECONNRESET'))
 					setTimeout(connectPool, 5 * 1000); // 5 sec
 				else
-					setTimeout(connectPool, 1000); // 1 sec
+					connectPool();
 			}
 
 		}
