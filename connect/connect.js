@@ -96,6 +96,7 @@ void function () {
 
 			function error(err) {
 				log.warn('(system) error', err);
+				c.destroy();
 				remove(err);
 			}
 
