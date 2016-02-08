@@ -3,7 +3,11 @@
   "version": "0.0.0",
   "description": "reverse connector",
   "main": "index.js",
-  "dependencies": [],
+  "dependencies": {
+    "date-time-string": "0.0.9",
+    "log-manager": "0.0.10",
+    "log-writer": "0.0.9"
+  },
   "keywords": [
     "reverse",
     "proxy"
