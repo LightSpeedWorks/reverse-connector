@@ -4,7 +4,9 @@ void function () {
 	var assert = require('assert');
 	var path = require('path');
 	var net = require('net');
-	var log = require('log-manager').getLogger();
+	var LogWriter = require('log-writer');
+	var LogManager = require('log-manager').setWriter(new LogWriter('connect-%s.log'));
+	var log = LogManager.getLogger();
 	var startStatistics = require('../lib/start-statistics');
 
 	log.info('node', process.version, path.basename(__filename));
