@@ -2,7 +2,7 @@
 	"logLevel": "info",
 	"systemHost": "localhost",
 	"systemPort": 8009,
-	"systemPool": 10,
+	"systemPool": 2,
 	"targets": [
 		{
 			"targetName": "target1",
