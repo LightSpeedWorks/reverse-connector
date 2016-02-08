@@ -42,7 +42,7 @@ void function () {
 
 						var s = clientPendingSockets[targetName] && clientPendingSockets[targetName].shift();
 						if (s) {
-							log.info('(client) wait connection connected!');
+							log.info('(client) wait connection connected!', Date.now() - s.startTime, 'msec');
 							c.pipe(s);
 							s.pipe(c);
 							remove();
@@ -127,6 +127,8 @@ void function () {
 
 			log.debug('(client) client connected. remain', systemPoolSockets[targetName].length);
 
+			c.startTime = Date.now();
+
 			c.on('error', function error(err) {
 				log.warn('(client) error', err);
 				c.destroy();
@@ -138,7 +140,7 @@ void function () {
 
 			var s = systemPoolSockets[targetName].shift();
 			if (!s) {
-				log.info('(client) no pool, connection wait!');
+				log.debug('(client) no pool, connection wait!');
 				clientPendingSockets[targetName].push(c);
 				setTimeout(function () {
 					clientPendingSockets[targetName] = clientPendingSockets[targetName].filter(function (s) {
@@ -148,7 +150,7 @@ void function () {
 						}
 						return s !== c;
 					});
-				}, 1000);
+				}, 3000);
 				return;
 			}
 
