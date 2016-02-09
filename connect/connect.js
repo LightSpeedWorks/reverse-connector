@@ -12,8 +12,11 @@ void function () {
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
 	var configs = require('./connect-config.json');
-	log.setLevel(configs.logLevel);
+	if (configs.logLevel)
+		log.setLevel(configs.logLevel);
 
+	log.info({logLevel: configs.logLevel, systemPort: configs.systemPort,
+		systemHost: configs.systemHost, systemPool: configs.systemPool});
 	assert(       configs.systemHost,  'configs.systemHost');
 	assert(Number(configs.systemPort), 'configs.systemPort');
 	assert(Number(configs.systemPool), 'configs.systemPool');

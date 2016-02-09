@@ -12,12 +12,18 @@ void function () {
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
 	var configs = require('./proxy-config.json');
-	log.setLevel(configs.logLevel);
+	if (configs.logLevel)
+		log.setLevel(configs.logLevel);
 
 	var systemPoolSockets = {};
 	var clientPendingSockets = {};
 
-	assert(Number(configs.systemPort), 'config.systemPort');
+	log.info({logLevel: configs.logLevel, systemPort: configs.systemPort,
+		serverHost: configs.serverHost, serverPort: configs.serverPort});
+	assert(Number(configs.systemPort), 'configs.systemPort');
+	assert(Number(configs.serverPort), 'configs.serverPort');
+	assert(       configs.serverHost,  'configs.serverHost');
+	assert(       configs.clients,     'configs.clients');
 
 	var myName = '(proxy)';
 	var countUp = startStatistics(log, myName).countUp;
