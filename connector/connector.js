@@ -1,4 +1,4 @@
-// connect.js
+// connector.js
 
 void function () {
 	var assert = require('assert');
@@ -11,7 +11,7 @@ void function () {
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
-	var configs = require('./connect-config.json');
+	var configs = require('./connector-config.json');
 	if (configs.logLevel)
 		log.setLevel(configs.logLevel);
 
@@ -21,7 +21,7 @@ void function () {
 	assert(Number(configs.systemPort), 'configs.systemPort');
 	assert(Number(configs.systemPool), 'configs.systemPool');
 
-	var myName = '(connect)';
+	var myName = '(connector)';
 	var countUp = startStatistics(log, myName).countUp;
 
 	configs.targets.forEach(function (config) {
