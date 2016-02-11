@@ -26,14 +26,14 @@ void function () {
 				{allowHalfOpen:true},
 				function connectionTarget(c) {
 			log.debug(myName, 'connected.');
-			var receivied = false;
+			var received = false;
 			c.on('error', function error(err) {
 				log.warn(myName, 'error', err);
 				c.destroy();
 			});
 			c.on('end', function end() {
 				log.debug(myName, 'disconnected');
-				if (!receivied) {
+				if (!received) {
 					log.warn(myName, 'client has gone!');
 				}
 			});
@@ -41,7 +41,7 @@ void function () {
 				var buff = c.read();
 				if (!buff) return;
 
-				receivied = true;
+				received = true;
 				var words = buff.toString().trim().split(' ');
 				log.trace(myName, 'read.', words.join(' '));
 				setTimeout(function () {
