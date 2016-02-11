@@ -1,0 +1,15 @@
+{
+	"logLevel": "info",
+	"forwarders": [
+		{
+			"servicePort": 9101,
+			"forwarderHost": "localhost",
+			"forwarderPort": 9001
+		},
+		{
+			"servicePort": 9102,
+			"forwarderHost": "localhost",
+			"forwarderPort": 9002
+		}
+	]
+}
