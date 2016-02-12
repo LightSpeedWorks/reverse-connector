@@ -11,7 +11,8 @@ void function () {
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
-	var configs = require('./proxy-config.json');
+
+	var configs = require('../lib/default-config')('local-proxy-config', 'proxy-config', '\t');
 	if (configs.logLevel)
 		log.setLevel(configs.logLevel);
 
