@@ -43,9 +43,11 @@ void function () {
 
 			if (!using) {
 				var words;
-				if (buff[0] === 0x24 &&
-						(words = buff.toString().split(' '), words[0]) === '$REVERSE') {
-					var targetName = words[1];
+				if (buff[0] === constants.method.charCodeAt(0) &&
+						buff[1] === constants.method.charCodeAt(1) &&
+						buff[2] === constants.method.charCodeAt(2) &&
+						(words = buff.toString().split(' '), words[0]) === constants.method) {
+					var targetName = words[1].split('?')[1];
 					if (systemPoolSockets[targetName]) {
 
 						var s = clientPendingSockets[targetName] && clientPendingSockets[targetName].shift();

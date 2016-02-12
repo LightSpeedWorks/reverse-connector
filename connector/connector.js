@@ -47,9 +47,13 @@ void function () {
 					function connectionSystem() {
 				log.debug('(system) connected.');
 
-				c.write('$REVERSE ' + config.targetName + ' HTTP/1.0\r\n\r\n');
+				var msg = [[constants.method,
+					constants.url + '?' + config.targetName,
+					constants.version].join(' '),
+					'Host: ' + configs.systemHost + ':' + configs.systemPort,
+					'', ''].join('\r\n');
+				c.write(msg);
 
-				// c.removeListers('error');
 				c.on('readable', function readable() {
 					var buff = c.read();
 					if (!buff) return;
@@ -70,11 +74,9 @@ void function () {
 						s.on('error', error);
 						s.on('end', function end() {
 							log.debug('(target) disconnected.');
-							// c.end();
 						});
 						c.on('end', function end() {
 							log.debug('(system) disconnected.');
-							//s.end();///
 							stats.countUp();
 						});
 
