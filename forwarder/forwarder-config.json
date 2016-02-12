@@ -10,6 +10,11 @@
 			"servicePort": 9102,
 			"forwarderHost": "localhost",
 			"forwarderPort": 9002
+		},
+		{
+			"servicePort": 13389,
+			"forwarderHost": "localhost",
+			"forwarderPort": 3389
 		}
 	]
 }

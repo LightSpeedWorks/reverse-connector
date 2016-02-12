@@ -1,0 +1,12 @@
+{
+	"logLevel": "trace",
+	"rdpHost": "localhost",
+	"rdpPort": 3389,
+	"forwarders": [
+		{
+			"servicePort": 13389,
+			"forwarderHost": "localhost",
+			"forwarderPort": 3389
+		}
+	]
+}
