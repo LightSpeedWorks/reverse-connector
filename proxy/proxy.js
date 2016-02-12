@@ -7,7 +7,7 @@ void function () {
 	var LogWriter = require('log-writer');
 	var LogManager = require('log-manager').setWriter(new LogWriter('proxy-%s.log'));
 	var log = LogManager.getLogger();
-	var startStatistics = require('../lib/start-statistics');
+	var Statistics = require('../lib/statistics');
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
@@ -27,7 +27,7 @@ void function () {
 	assert(       configs.clients,     'configs.clients');
 
 	var myName = '(proxy)';
-	var countUp = startStatistics(log, myName).countUp;
+	var stats = new Statistics(log, myName);
 
 	var systemNetSvr = net.createServer(
 			{allowHalfOpen:true},
@@ -144,7 +144,7 @@ void function () {
 			});
 			c.on('end', function end() {
 				log.debug('(client) disconnected');
-				countUp();
+				stats.countUp();
 			});
 
 			var s = systemPoolSockets[targetName].shift();

@@ -5,7 +5,7 @@ void function () {
 	var path = require('path');
 	var net = require('net');
 	var log = require('log-manager').getLogger();
-	var startStatistics = require('../lib/start-statistics');
+	var Statistics = require('../lib/statistics');
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
@@ -15,7 +15,7 @@ void function () {
 	var serverId = 30000;
 	var myName = '(server)';
 
-	var countUp = startStatistics(log, myName).countUp;
+	var stats = new Statistics(log, myName);
 
 	configs.servers.forEach(function (config) {
 		assert(Number(config.serverPort), 'config.serverPort');
@@ -48,7 +48,7 @@ void function () {
 					log.trace(myName, 'write.', words.join(' '));
 					c.write('RESULT-SERVER ' + words[1] + ' ' + words[2] + '=' + eval(words[2]) + '\r\n');
 					c.end();
-					countUp();
+					stats.countUp();
 				}, 1000);
 			});
 		}).listen(config.serverPort, function listeningServer() {

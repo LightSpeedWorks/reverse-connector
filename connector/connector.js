@@ -7,7 +7,7 @@ void function () {
 	var LogWriter = require('log-writer');
 	var LogManager = require('log-manager').setWriter(new LogWriter('connect-%s.log'));
 	var log = LogManager.getLogger();
-	var startStatistics = require('../lib/start-statistics');
+	var Statistics = require('../lib/statistics');
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
@@ -23,7 +23,7 @@ void function () {
 	assert(Number(configs.systemPool), 'configs.systemPool');
 
 	var myName = '(connector)';
-	var countUp = startStatistics(log, myName).countUp;
+	var stats = new Statistics(log, myName);
 
 	configs.targets.forEach(function (config) {
 		assert(       config.targetName,  'config.targetName');
@@ -76,7 +76,7 @@ void function () {
 						c.on('end', function end() {
 							log.debug('(system) disconnected.');
 							//s.end();///
-							countUp();
+							stats.countUp();
 						});
 
 						function error(err) {

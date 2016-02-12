@@ -5,7 +5,7 @@ void function () {
 	var path = require('path');
 	var net = require('net');
 	var log = require('log-manager').getLogger();
-	var startStatistics = require('../lib/start-statistics');
+	var Statistics = require('../lib/statistics');
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
@@ -15,7 +15,7 @@ void function () {
 
 	var forwarderId = 20000;
 	var myName = '(rdp-spork)';
-	var countUp = startStatistics(log, myName).countUp;
+	var stats = startStatistics(log, myName);
 
 	assert(       configs.rdpHost,  'configs.rdpHost');
 	assert(Number(configs.rdpPort), 'configs.rdpPort');
@@ -52,6 +52,8 @@ void function () {
 						'0x' + buff[1].toString(16) + ' ' +
 						'0x' + buff[2].toString(16) + ' ' +
 						'0x' + buff[3].toString(16));
+
+					stats.countUp();
 
 					if (buff[0] === 3 && buff[1] === 0)
 						s = net.connect(

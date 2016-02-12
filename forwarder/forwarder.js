@@ -5,7 +5,7 @@ void function () {
 	var path = require('path');
 	var net = require('net');
 	var log = require('log-manager').getLogger();
-	var startStatistics = require('../lib/start-statistics');
+	var Statistics = require('../lib/statistics');
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
@@ -15,7 +15,7 @@ void function () {
 
 	var forwarderId = 20000;
 	var myName = '(forwarder)';
-	var countUp = startStatistics(log, myName).countUp;
+	var stats = new Statistics(log, myName);
 
 	configs.forwarders.forEach(function (config) {
 		assert(Number(config.forwarderPort), 'config.forwarderPort');
@@ -30,6 +30,7 @@ void function () {
 			var s = net.connect(
 					{port:config.forwarderPort, host:config.forwarderHost, allowHalfOpen:true},
 					function connectionForwarder() {
+				stats.countUp();
 				s.pipe(c);
 				c.pipe(s);
 			});
