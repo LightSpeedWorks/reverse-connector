@@ -4,10 +4,9 @@ void function () {
 	var assert = require('assert');
 	var path = require('path');
 	var net = require('net');
-	var LogWriter = require('log-writer');
-	var LogManager = require('log-manager').setWriter(new LogWriter('proxy-%s.log'));
-	var log = LogManager.getLogger();
+	var log = require('log-manager').setWriter(new require('log-writer')('proxy-%s.log')).getLogger();
 	var Statistics = require('../lib/statistics');
+	var constants = require('../lib/constants');
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);

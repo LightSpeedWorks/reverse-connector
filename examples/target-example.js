@@ -4,8 +4,9 @@ void function () {
 	var assert = require('assert');
 	var path = require('path');
 	var net = require('net');
-	var log = require('log-manager').getLogger();
+	var log = require('log-manager').setWriter(new require('log-writer')('target-example-%s.log')).getLogger();
 	var Statistics = require('../lib/statistics');
+	var constants = require('../lib/constants');
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
