@@ -9,7 +9,8 @@ void function () {
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
-	var configs = require('./forwarder-config.json');
+
+	var configs = require('../lib/default-config')('local-forwarder-config', 'forwarder-config', '\t');
 	log.setLevel(configs.logLevel);
 
 	var forwarderId = 20000;
@@ -27,7 +28,7 @@ void function () {
 				function connectionService(c) {
 			log.debug(myName, 'connected.');
 			var s = net.connect(
-					{port:configs.forwarderPort, host:configs.forwarderHost, allowHalfOpen:true},
+					{port:config.forwarderPort, host:config.forwarderHost, allowHalfOpen:true},
 					function connectionForwarder() {
 				s.pipe(c);
 				c.pipe(s);
