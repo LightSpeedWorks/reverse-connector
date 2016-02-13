@@ -83,7 +83,6 @@ void function () {
 					}
 					else {
 						log.warn('(system) targetName ' + targetName + ' not found!');
-						//c.write('wrong!!!\r\n');
 						c.destroy();
 					}
 
@@ -176,27 +175,28 @@ void function () {
 		});
 
 		function combine(c, s) {
-			//var x1 = new TransformXor(0xCD);
-			//var x2 = new TransformXor(0xCD);
-			//var x3 = new TransformXor(0xCD);
-			//var x4 = new TransformXor(0xCD);
+			var x1 = new TransformXor(constants.xor1);
+			var x2 = new TransformXor(constants.xor2);
+			var x3 = new TransformXor(constants.xor2);
+			var x4 = new TransformXor(constants.xor1);
+
 			var gz = zlib.createGzip();
 			var uz = zlib.createUnzip();
+
 			gz.on('error', function () {
 				log.warn('gz error');
 				c.destroy();
 				s.destroy();
 			});
+
 			uz.on('error', function () {
 				log.warn('uz error');
 				c.destroy();
 				s.destroy();
 			});
 
-			//c.pipe(x1).pipe(uz).pipe(x2).pipe(s);
-			//s.pipe(x3).pipe(gz).pipe(x4).pipe(c);
-			c.pipe(uz).pipe(s);
-			s.pipe(gz).pipe(c);
+			c.pipe(x1).pipe(uz).pipe(x2).pipe(s);
+			s.pipe(x3).pipe(gz).pipe(x4).pipe(c);
 		}
 
 	}); // configs.forEach

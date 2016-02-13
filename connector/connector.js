@@ -43,8 +43,6 @@ void function () {
 				return;
 
 			var s;
-			//var xs = new TransformXor(0xCD);
-			//var xc = new TransformXor(0xCD);
 			var gz = zlib.createGzip();
 			var uz = zlib.createUnzip();
 			gz.on('error', function () {
@@ -86,18 +84,14 @@ void function () {
 							log.trace('(target) connected.');
 						});
 
-						c.pipe(uz).pipe(s);
-						s.pipe(gz).pipe(c);
-						uz.write(buff);
+						var x1 = new TransformXor(constants.xor1);
+						var x2 = new TransformXor(constants.xor2);
+						var x3 = new TransformXor(constants.xor2);
+						var x4 = new TransformXor(constants.xor1);
 
-						//c.pipe(xc).pipe(uz).pipe(s);
-						//s.pipe(gz).pipe(xs).pipe(c);
-						//xc.write(buff);
-
-						//c.pipe(xc).pipe(s);
-						//s.pipe(xs).pipe(c);
-						//s.write(buff);
-
+						c.pipe(x1).pipe(uz).pipe(x2).pipe(s);
+						s.pipe(x3).pipe(gz).pipe(x4).pipe(c);
+						x1.write(buff);
 
 						s.on('error', error);
 						s.on('end', function end() {
