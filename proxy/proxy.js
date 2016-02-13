@@ -120,6 +120,9 @@ void function () {
 
 	}).listen(configs.systemPort, function listeningSystem() {
 		log.info('(system) server bound. port', configs.systemPort);
+	}).on('error', function (err) {
+		log.error('(system) server error.', err);
+		setTimeout(function () { process.exit(1); }, 500);
 	});
 
 	configs.clients.forEach(function (config) {
@@ -172,6 +175,9 @@ void function () {
 			combine(c, s);
 		}).listen(config.clientPort, function listeningClient() {
 			log.info('(client) server bound. port', config.clientPort);
+		}).on('error', function (err) {
+			log.error('(client) server error.', err);
+			setTimeout(function () { process.exit(1); }, 500);
 		});
 
 		function combine(c, s) {

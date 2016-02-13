@@ -57,6 +57,9 @@ void function () {
 			});
 		}).listen(config.targetPort, function listeningTarget() {
 			log.info(myName, 'server bound. port', config.targetPort);
+		}).on('error', function (err) {
+			log.error(myName, 'server error.', err);
+			setTimeout(function () { process.exit(1); }, 500);
 		});
 
 	}); // configs.forEach
