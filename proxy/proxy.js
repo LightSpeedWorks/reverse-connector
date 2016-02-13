@@ -34,9 +34,6 @@ void function () {
 			function connectionSystem(c) {
 		log.debug('(system) connected.');
 
-		var xs = new TransformXor(0xCD);
-		var xc = new TransformXor(0xCD);
-
 		c.on('error', error);
 		c.on('end', end);
 
@@ -57,8 +54,7 @@ void function () {
 						var s = clientPendingSockets[targetName] && clientPendingSockets[targetName].shift();
 						if (s) {
 							log.info('(client) wait connection connected!', Date.now() - s.startTime, 'msec');
-							c.pipe(xc).pipe(s);
-							s.pipe(xs).pipe(c);
+							combine(c, s);
 							remove();
 							return;
 						}
@@ -173,14 +169,18 @@ void function () {
 				log.trace('(client) system disconnected');
 			});
 
+			combine(c, s);
+		}).listen(config.clientPort, function listeningClient() {
+			log.info('(client) server bound. port', config.clientPort);
+		});
+
+		function combine(c, s) {
 			var xs = new TransformXor(0xCD);
 			var xc = new TransformXor(0xCD);
 
 			c.pipe(xc).pipe(s);
 			s.pipe(xs).pipe(c);
-		}).listen(config.clientPort, function listeningClient() {
-			log.info('(client) server bound. port', config.clientPort);
-		});
+		}
 
 	}); // configs.forEach
 
