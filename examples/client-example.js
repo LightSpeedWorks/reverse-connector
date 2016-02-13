@@ -41,7 +41,7 @@ void function () {
 			var c = net.connect(
 					{port:config.clientPort, host:config.clientHost, allowHalfOpen:true},
 					function connectionClient() {
-				log.debug(myName, 'using.');
+				log.trace(myName, 'using.');
 				connected = true;
 
 				var cNo = ++clientId;
@@ -63,8 +63,14 @@ void function () {
 				if (!buff) return;
 				returned = true;
 
-				log.debug(myName, 'read.');
-				log.trace(myName, 'read. ' + (a+b) + ' = ' + buff.toString().trim());
+				var words = buff.toString().trim().split(' ');
+				var result = (words[2] || 'x+y=z').split('=')[1];
+
+				log.trace(myName, 'read.');
+				if (words.length === 3 && (a+b) == result)
+					log.debug(myName, 'read.', (a+b), '=', result, words.join(' '));
+				else
+					log.warn(myName, 'read.', (a+b), '=', result, words.join(' '));
 				stats.countUp();
 			});
 
@@ -78,7 +84,7 @@ void function () {
 			}
 
 			function end() {
-				log.debug(myName, 'disconnected. remain', clientPoolSockets.length);
+				log.trace(myName, 'disconnected. remain', clientPoolSockets.length);
 				if (!connected) log.warn(myName, 'can not connect!');
 				else if (!returned) log.warn(myName, 'server down!');
 				disconnected = true;

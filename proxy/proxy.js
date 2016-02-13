@@ -7,6 +7,7 @@ void function () {
 	var log = require('log-manager').setWriter(new require('log-writer')('proxy-%s.log')).getLogger();
 	var Statistics = require('../lib/statistics');
 	var constants = require('../lib/constants');
+	var TransformXor = require('../lib/transform-xor');
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
@@ -33,6 +34,9 @@ void function () {
 			function connectionSystem(c) {
 		log.debug('(system) connected.');
 
+		var xs = new TransformXor(0xCD);
+		var xc = new TransformXor(0xCD);
+
 		c.on('error', error);
 		c.on('end', end);
 
@@ -53,8 +57,8 @@ void function () {
 						var s = clientPendingSockets[targetName] && clientPendingSockets[targetName].shift();
 						if (s) {
 							log.info('(client) wait connection connected!', Date.now() - s.startTime, 'msec');
-							c.pipe(s);
-							s.pipe(c);
+							c.pipe(xc).pipe(s);
+							s.pipe(xs).pipe(c);
 							remove();
 							return;
 						}
@@ -88,6 +92,7 @@ void function () {
 
 				}
 				else {
+					// default server (passthru)
 					var s = net.connect(
 							{port:configs.serverPort, host:configs.serverHost, allowHalfOpen:true},
 							function connectionServer() {
@@ -114,7 +119,7 @@ void function () {
 		}
 
 		function end() {
-			log.debug('(system) disconnected. (1)');
+			log.trace('(system) disconnected. (1)');
 		}
 
 	}).listen(configs.systemPort, function listeningSystem() {
@@ -135,7 +140,7 @@ void function () {
 				{allowHalfOpen:true},
 				function connectionClient(c) {
 
-			log.debug('(client) client connected. remain', systemPoolSockets[targetName].length);
+			log.trace('(client) client connected. remain', systemPoolSockets[targetName].length);
 
 			c.startTime = Date.now();
 
@@ -144,7 +149,7 @@ void function () {
 				c.destroy();
 			});
 			c.on('end', function end() {
-				log.debug('(client) disconnected');
+				log.trace('(client) disconnected');
 				stats.countUp();
 			});
 
@@ -165,10 +170,14 @@ void function () {
 			}
 
 			s.on('end', function end() {
-				log.debug('(client) system disconnected');
+				log.trace('(client) system disconnected');
 			});
-			c.pipe(s);
-			s.pipe(c);
+
+			var xs = new TransformXor(0xCD);
+			var xc = new TransformXor(0xCD);
+
+			c.pipe(xc).pipe(s);
+			s.pipe(xs).pipe(c);
 		}).listen(config.clientPort, function listeningClient() {
 			log.info('(client) server bound. port', config.clientPort);
 		});

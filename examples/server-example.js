@@ -26,14 +26,14 @@ void function () {
 		var serverNetSvr = net.createServer(
 				{allowHalfOpen:true},
 				function connectionTarget(c) {
-			log.debug(myName, 'connected.');
+			log.trace(myName, 'connected.');
 			var received = false;
 			c.on('error', function error(err) {
 				log.warn(myName, 'error', err);
 				c.destroy();
 			});
 			c.on('end', function end() {
-				log.debug(myName, 'disconnected');
+				log.trace(myName, 'disconnected');
 				if (!received) {
 					log.warn(myName, 'client has gone!');
 				}
@@ -46,14 +46,17 @@ void function () {
 				var words = buff.toString().trim().split(' ');
 				log.trace(myName, 'read.', words.join(' '));
 				setTimeout(function () {
-					log.trace(myName, 'write.', words.join(' '));
+					if (words.length === 3 && words[0] === 'CALC')
+						log.debug(myName, 'write.', words.length, words.join(' '));
+					else
+						log.warn(myName, 'write.', words.length, words.join(' '));
 					c.write('RESULT-SERVER ' + words[1] + ' ' + words[2] + '=' + eval(words[2]) + '\r\n');
 					c.end();
 					stats.countUp();
 				}, 1000);
 			});
 		}).listen(config.serverPort, function listeningServer() {
-			log.debug(myName, 'server bound. port', config.serverPort);
+			log.info(myName, 'server bound. port', config.serverPort);
 		});
 
 	}); // configs.forEach

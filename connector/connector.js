@@ -7,6 +7,7 @@ void function () {
 	var log = require('log-manager').setWriter(new require('log-writer')('connector-%s.log')).getLogger();
 	var Statistics = require('../lib/statistics');
 	var constants = require('../lib/constants');
+	var TransformXor = require('../lib/transform-xor');
 
 	log.info('node', process.version, path.basename(__filename));
 	process.title = path.basename(__filename);
@@ -40,12 +41,14 @@ void function () {
 			if (systemPoolSockets.length >= configs.systemPool)
 				return;
 
-			var using = false;
+			var s;
+			var xs = new TransformXor(0xCD);
+			var xc = new TransformXor(0xCD);
 
 			var c = net.connect(
 					{port:configs.systemPort, host:configs.systemHost, allowHalfOpen:true},
 					function connectionSystem() {
-				log.debug('(system) connected.');
+				log.trace('(system) connected.');
 
 				var msg = [[constants.method,
 					constants.url + '?' + config.targetName,
@@ -58,25 +61,28 @@ void function () {
 					var buff = c.read();
 					if (!buff) return;
 
-					if (!using) {
-						log.debug('(system) using.');
+					if (!s) {
+						log.trace('(system) using.');
 
 						remove();
 						c.removeListener('readable', readable);
 
-						var s = net.connect(
+						s = net.connect(
 								{port:config.targetPort, host:config.targetHost, allowHalfOpen:true},
 								function connectionTarget() {
-							log.debug('(target) connected.');
+							log.trace('(target) connected.');
 						});
-						s.pipe(c);
-						c.pipe(s);
+
+						xc.write(buff);
+
+						c.pipe(xc).pipe(s);
+						s.pipe(xs).pipe(c);
 						s.on('error', error);
 						s.on('end', function end() {
-							log.debug('(target) disconnected.');
+							log.trace('(target) disconnected.');
 						});
 						c.on('end', function end() {
-							log.debug('(system) disconnected.');
+							log.trace('(system) disconnected.');
 							stats.countUp();
 						});
 
@@ -84,14 +90,6 @@ void function () {
 							log.warn('(target) error', err);
 						}
 
-						using = true;
-					}
-
-					if (s)
-						s.write(buff);
-					else {
-						log.warn('(system) not enough! system pool.');
-						c.end();
 					}
 
 				});
@@ -108,7 +106,7 @@ void function () {
 			}
 
 			function end() {
-				log.debug('(system) disconnected. remain', systemPoolSockets.length);
+				log.trace('(system) disconnected. remain', systemPoolSockets.length);
 				remove();
 			}
 
