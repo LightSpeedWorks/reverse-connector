@@ -4,6 +4,7 @@ void function () {
 	var assert = require('assert');
 	var path = require('path');
 	var net = require('net');
+	var zlib = require('zlib');
 	var log = require('log-manager').setWriter(new require('log-writer')('proxy-%s.log')).getLogger();
 	var Statistics = require('../lib/statistics');
 	var constants = require('../lib/constants');
@@ -134,38 +135,38 @@ void function () {
 
 		var clientNetSvr = net.createServer(
 				{allowHalfOpen:true},
-				function connectionClient(c) {
+				function connectionClient(s) {
 
 			log.trace('(client) client connected. remain', systemPoolSockets[targetName].length);
 
-			c.startTime = Date.now();
+			s.startTime = Date.now();
 
-			c.on('error', function error(err) {
+			s.on('error', function error(err) {
 				log.warn('(client) error', err);
-				c.destroy();
+				s.destroy();
 			});
-			c.on('end', function end() {
+			s.on('end', function end() {
 				log.trace('(client) disconnected');
 				stats.countUp();
 			});
 
-			var s = systemPoolSockets[targetName].shift();
-			if (!s) {
+			var c = systemPoolSockets[targetName].shift();
+			if (!c) {
 				log.debug('(client) no pool, connection wait!');
-				clientPendingSockets[targetName].push(c);
+				clientPendingSockets[targetName].push(s);
 				setTimeout(function () {
-					clientPendingSockets[targetName] = clientPendingSockets[targetName].filter(function (s) {
-						if (s === c) {
+					clientPendingSockets[targetName] = clientPendingSockets[targetName].filter(function (c) {
+						if (c === s) {
 							log.warn('(client) no pool, connection rejected!');
-							c.destroy();
+							s.destroy();
 						}
-						return s !== c;
+						return c !== s;
 					});
 				}, 3000);
 				return;
 			}
 
-			s.on('end', function end() {
+			c.on('end', function end() {
 				log.trace('(client) system disconnected');
 			});
 
@@ -175,11 +176,27 @@ void function () {
 		});
 
 		function combine(c, s) {
-			var xs = new TransformXor(0xCD);
-			var xc = new TransformXor(0xCD);
+			//var x1 = new TransformXor(0xCD);
+			//var x2 = new TransformXor(0xCD);
+			//var x3 = new TransformXor(0xCD);
+			//var x4 = new TransformXor(0xCD);
+			var gz = zlib.createGzip();
+			var uz = zlib.createUnzip();
+			gz.on('error', function () {
+				log.warn('gz error');
+				c.destroy();
+				s.destroy();
+			});
+			uz.on('error', function () {
+				log.warn('uz error');
+				c.destroy();
+				s.destroy();
+			});
 
-			c.pipe(xc).pipe(s);
-			s.pipe(xs).pipe(c);
+			//c.pipe(x1).pipe(uz).pipe(x2).pipe(s);
+			//s.pipe(x3).pipe(gz).pipe(x4).pipe(c);
+			c.pipe(uz).pipe(s);
+			s.pipe(gz).pipe(c);
 		}
 
 	}); // configs.forEach

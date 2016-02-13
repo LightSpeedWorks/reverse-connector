@@ -4,6 +4,7 @@ void function () {
 	var assert = require('assert');
 	var path = require('path');
 	var net = require('net');
+	var zlib = require('zlib');
 	var log = require('log-manager').setWriter(new require('log-writer')('connector-%s.log')).getLogger();
 	var Statistics = require('../lib/statistics');
 	var constants = require('../lib/constants');
@@ -42,8 +43,20 @@ void function () {
 				return;
 
 			var s;
-			var xs = new TransformXor(0xCD);
-			var xc = new TransformXor(0xCD);
+			//var xs = new TransformXor(0xCD);
+			//var xc = new TransformXor(0xCD);
+			var gz = zlib.createGzip();
+			var uz = zlib.createUnzip();
+			gz.on('error', function () {
+				log.warn('gz error');
+				c.destroy();
+				if (s) s.destroy();
+			});
+			uz.on('error', function () {
+				log.warn('uz error');
+				c.destroy();
+				if (s) s.destroy();
+			});
 
 			var c = net.connect(
 					{port:configs.systemPort, host:configs.systemHost, allowHalfOpen:true},
@@ -73,10 +86,19 @@ void function () {
 							log.trace('(target) connected.');
 						});
 
-						xc.write(buff);
+						c.pipe(uz).pipe(s);
+						s.pipe(gz).pipe(c);
+						uz.write(buff);
 
-						c.pipe(xc).pipe(s);
-						s.pipe(xs).pipe(c);
+						//c.pipe(xc).pipe(uz).pipe(s);
+						//s.pipe(gz).pipe(xs).pipe(c);
+						//xc.write(buff);
+
+						//c.pipe(xc).pipe(s);
+						//s.pipe(xs).pipe(c);
+						//s.write(buff);
+
+
 						s.on('error', error);
 						s.on('end', function end() {
 							log.trace('(target) disconnected.');
@@ -102,6 +124,7 @@ void function () {
 			function error(err) {
 				log.warn('(system) error', err);
 				c.destroy();
+				if (s) s.destroy();
 				remove(err);
 			}
 
