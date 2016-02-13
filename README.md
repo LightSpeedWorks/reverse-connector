@@ -6,22 +6,22 @@ reverse connector.
 ![image](doc/doc.png "image")
 
 
-## Client side:
+## Client side: at Data Center
 
 ```
-$ node reverse &
-```
-
-reverse-config.json
-
-
-## Server side:
-
-```
-$ node proxy &
+$ node proxy
 ```
 
 proxy-config.json
+
+
+## Server side: at Customer
+
+```
+$ node connector
+```
+
+connector-config.json
 
 
 # LICENSE
