@@ -45,13 +45,13 @@ void function () {
 			var s;
 			var gz = zlib.createGzip();
 			var uz = zlib.createUnzip();
-			gz.on('error', function () {
-				log.warn('gz error');
+			gz.on('error', function (err) {
+				log.warn('gz error', err);
 				c.destroy();
 				if (s) s.destroy();
 			});
-			uz.on('error', function () {
-				log.warn('uz error');
+			uz.on('error', function (err) {
+				log.warn('uz error', err);
 				c.destroy();
 				if (s) s.destroy();
 			});
@@ -89,9 +89,15 @@ void function () {
 						var x3 = new TransformXor(constants.xor2);
 						var x4 = new TransformXor(constants.xor1);
 
-						c.pipe(x1).pipe(uz).pipe(x2).pipe(s);
-						s.pipe(x3).pipe(gz).pipe(x4).pipe(c);
+						//x1.write(buff);
+						//c.pipe(x1).pipe(uz).pipe(x2).pipe(s);
+						//s.pipe(x3).pipe(gz).pipe(x4).pipe(c);
 						x1.write(buff);
+						c.pipe(x1).pipe(s);
+						s.pipe(x4).pipe(c);
+						//s.write(buff);
+						//c.pipe(s);
+						//s.pipe(c);
 
 						s.on('error', error);
 						s.on('end', function end() {

@@ -180,31 +180,35 @@ void function () {
 			setTimeout(function () { process.exit(1); }, 500);
 		});
 
-		function combine(c, s) {
-			var x1 = new TransformXor(constants.xor1);
-			var x2 = new TransformXor(constants.xor2);
-			var x3 = new TransformXor(constants.xor2);
-			var x4 = new TransformXor(constants.xor1);
-
-			var gz = zlib.createGzip();
-			var uz = zlib.createUnzip();
-
-			gz.on('error', function () {
-				log.warn('gz error');
-				c.destroy();
-				s.destroy();
-			});
-
-			uz.on('error', function () {
-				log.warn('uz error');
-				c.destroy();
-				s.destroy();
-			});
-
-			c.pipe(x1).pipe(uz).pipe(x2).pipe(s);
-			s.pipe(x3).pipe(gz).pipe(x4).pipe(c);
-		}
-
 	}); // configs.forEach
+
+	function combine(c, s) {
+		var x1 = new TransformXor(constants.xor1);
+		var x2 = new TransformXor(constants.xor2);
+		var x3 = new TransformXor(constants.xor2);
+		var x4 = new TransformXor(constants.xor1);
+
+		var gz = zlib.createGzip();
+		var uz = zlib.createUnzip();
+
+		gz.on('error', function (err) {
+			log.error('gz error', err);
+			c.destroy();
+			s.destroy();
+		});
+
+		uz.on('error', function (err) {
+			log.error('uz error', err);
+			c.destroy();
+			s.destroy();
+		});
+
+		//c.pipe(x1).pipe(uz).pipe(x2).pipe(s);
+		//s.pipe(x3).pipe(gz).pipe(x4).pipe(c);
+		c.pipe(x1).pipe(s);
+		s.pipe(x4).pipe(c);
+		//c.pipe(s);
+		//s.pipe(c);
+	}
 
 }();
