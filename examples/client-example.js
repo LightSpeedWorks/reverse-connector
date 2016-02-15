@@ -49,7 +49,13 @@ void function () {
 				var cNo = ++clientId;
 				c.write('CALC ' + cNo + ' ' + a + '+' + b + '\r\n');
 				log.trace(myName, 'write. CALC', cNo, a + '+' + b, config.clientPort);
-				c.end();
+				//c.write('CALC ' + cNo + ' ' + a + '+' + b + '\r\n');
+				//log.trace(myName, 'write. CALC', cNo, a + '+' + b, config.clientPort);
+				//setTimeout(function () {
+				//	c.write('CALC ' + cNo + ' ' + a + '+' + b + '\r\n');
+				//	log.trace(myName, 'write. CALC', cNo, a + '+' + b, config.clientPort);
+					c.end();
+				//}, 10)
 				setTimeout(function () {
 					if (!returned) {
 						log.warn(myName, 'server not respond!');
@@ -65,14 +71,18 @@ void function () {
 				if (!buff) return;
 				returned = true;
 
-				var words = buff.toString().trim().split(' ');
-				var result = (words[2] || 'x+y=z').split('=')[1];
+				var lines = buff.toString().split('\n');
+				lines.forEach(function (line) {
+					if (line === '') return;
+					var words = line.trim().split(' ');
+					var result = (words[2] || 'x+y=z').split('=')[1];
 
-				log.trace(myName, 'read.');
-				if (words.length === 3 && (a+b) == result)
-					log.debug(myName, 'read.', (a+b), '=', result, words.join(' '));
-				else
-					log.warn(myName, 'read.', (a+b), '=', result, words.join(' '));
+					log.trace(myName, 'read.');
+					if (words.length === 3 && (a+b) == result)
+						log.debug(myName, 'read.', (a+b), '=', result, words.join(' '));
+					else
+						log.warn(myName, 'read.', (a+b), '=', result, words.join(' '));
+				});
 				stats.countUp();
 			});
 
