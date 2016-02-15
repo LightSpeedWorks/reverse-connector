@@ -191,6 +191,10 @@ void function () {
 		var x3 = new TransformXor(constants.xor2);
 		var x4 = new TransformXor(constants.xor1);
 
+		c.pipe(s);
+		s.pipe(c);
+
+/*
 		c.pipe(x1);
 		//x1.pipe(x2);
 		zz.unzip(x1, x2);
@@ -200,6 +204,7 @@ void function () {
 		//x3.pipe(x4);
 		zz.zip(x3, x4);
 		x4.pipe(c);
+*/
 	}
 
 }();

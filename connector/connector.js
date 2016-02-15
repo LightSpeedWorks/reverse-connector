@@ -79,6 +79,11 @@ void function () {
 						var x3 = new TransformXor(constants.xor2);
 						var x4 = new TransformXor(constants.xor1);
 
+						s.write(buff);
+						c.pipe(s);
+						s.pipe(c);
+
+/*
 						x1.write(buff);
 
 						c.pipe(x1);
@@ -90,6 +95,7 @@ void function () {
 						//x3.pipe(x4);
 						zz.zip(x3, x4);
 						x4.pipe(c);
+*/
 
 						s.on('error', error);
 						s.on('end', function end() {
