@@ -1,6 +1,8 @@
 // rdp-spork.js
 
 void function () {
+	'use strict';
+
 	var assert = require('assert');
 	var path = require('path');
 	var net = require('net');
