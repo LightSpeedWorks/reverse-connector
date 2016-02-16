@@ -38,25 +38,32 @@ void function () {
 			function connectionSystem(c) {
 		log.debug('(system) connected.');
 
+		var s;
+		var targetName;
 		c.on('error', error);
 		c.on('end', end);
 
-		var using = false;
 		c.on('readable', function readable() {
 			var buff = c.read();
 			if (!buff) return;
 
-			if (!using) {
+			c.removeListener('readable', readable);
+
+			if (!s) {
 				var words;
 				if (buff[0] === constants.method.charCodeAt(0) &&
 						buff[1] === constants.method.charCodeAt(1) &&
 						buff[2] === constants.method.charCodeAt(2) &&
 						(words = buff.toString().split(' '), words[0]) === constants.method) {
-					var targetName = words[1].split('?')[1];
+					targetName = words[1].split('?')[1];
 					if (systemPoolSockets[targetName]) {
 
-						var s = clientPendingSockets[targetName] && clientPendingSockets[targetName].shift();
+						s = clientPendingSockets[targetName] && clientPendingSockets[targetName].shift();
 						if (s) {
+							s.on('error', error);
+							s.on('end', function end() {
+								log.trace('(client) disconnected.');
+							});
 							log.info('(client) wait connection connected!', Date.now() - s.startTime, 'msec');
 							combine(c, s);
 							remove();
@@ -66,59 +73,54 @@ void function () {
 						systemPoolSockets[targetName].push(c);
 						log.debug('(system) connected. ' + targetName + ' remain ' +
 							systemPoolSockets[targetName].length);
-
-						c.on('error', function error(err) {
-							log.warn('(system) error', err);
-							c.destroy();
-							remove();
-						});
-
-						c.on('end', end);
-
-						function end() {
-							log.debug('(system) disconnected.');
-							remove();
-						}
-
-						function remove() {
-							systemPoolSockets[targetName] = systemPoolSockets[targetName].filter(s => s !== c);
-						}
 					}
 					else {
 						log.warn('(system) targetName ' + targetName + ' not found!');
 						c.destroy();
+						remove();
 					}
 
 				}
 				else {
 					// default server (passthru)
-					var s = net.connect(
+					s = net.connect(
 							{port:configs.serverPort, host:configs.serverHost, allowHalfOpen:true},
 							function connectionServer() {
-						s.write(buff);
-						c.pipe(s);
-						s.pipe(c);
 					});
+					s.write(buff);
+					c.pipe(s);
+					s.pipe(c);
 
-					s.on('error', function error(err) {
-						log.warn('(server) error', err);
-						s.destroy(); // end?
-						c.destroy(); // end?
+					s.on('error', error);
+					s.on('end', function end() {
+						log.trace('(server) disconnected.');
 					});
+					remove();
 				} // if REVERSE
 
-				c.removeListener('readable', readable);
-				using = true;
 			}
+			else {
+				throw new Error('eh!? twice readable!');
+			}
+
 		});
+
+		// remove c
+		function remove() {
+			if (targetName)
+				systemPoolSockets[targetName] = systemPoolSockets[targetName].filter(x => x !== c);
+		}
 
 		function error(err) {
 			log.warn('(system) error', err);
 			c.destroy();
+			if (s) s.destroy();
+			remove();
 		}
 
 		function end() {
-			log.trace('(system) disconnected. (1)');
+			log.trace('(system) disconnected.');
+			remove();
 		}
 
 	}).listen(configs.systemPort, function listeningSystem() {
