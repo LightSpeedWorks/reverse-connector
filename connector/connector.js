@@ -47,7 +47,10 @@ void function () {
 
 			var s;
 			var c = net.connect(
-					{port:configs.systemPort, host:configs.systemHost, allowHalfOpen:true},
+					{port:configs.systemPort,
+					 host:configs.systemHost,
+					 localAddress:configs.localAddress,
+					 allowHalfOpen:true},
 					function connectionSystem() {
 				log.trace('(system) connected.');
 
@@ -69,7 +72,10 @@ void function () {
 						c.removeListener('readable', readable);
 
 						s = net.connect(
-								{port:config.targetPort, host:config.targetHost, allowHalfOpen:true},
+								{port:config.targetPort,
+								 host:config.targetHost,
+								 localAddress:config.localAddress,
+								 allowHalfOpen:true},
 								function connectionTarget() {
 							log.trace('(target) connected.');
 						});
