@@ -1,16 +1,16 @@
 {
 	"logLevel": "info",
-	"systemPort": 8009,
+	"systemPort": 8109,
 	"serverHost": "localhost",
-	"serverPort": 8008,
+	"serverPort": 8108,
 	"clients": [
 		{
 			"targetName": "target1",
-			"clientPort": 8001
+			"clientPort": 8101
 		},
 		{
 			"targetName": "target2",
-			"clientPort": 8002
+			"clientPort": 8102
 		}
 	]
 }
