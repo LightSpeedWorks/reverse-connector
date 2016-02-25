@@ -2,7 +2,7 @@
 	"logLevel": "info",
 	"servers": [
 		{
-			"serverPort": 8008
+			"serverPort": 8108
 		}
 	]
 }

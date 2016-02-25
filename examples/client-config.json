@@ -3,17 +3,17 @@
 	"clients": [
 		{
 			"clientHost": "localhost",
-			"clientPort": 8001,
+			"clientPort": 8101,
 			"clientPool": 1
 		},
 		{
 			"clientHost": "localhost",
-			"clientPort": 8002,
+			"clientPort": 8102,
 			"clientPool": 1
 		},
 		{
 			"clientHost": "localhost",
-			"clientPort": 8009,
+			"clientPort": 8109,
 			"clientPool": 1
 		}
 	]

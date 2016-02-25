@@ -3,11 +3,11 @@
 	"targets": [
 		{
 			"targetName": "target1",
-			"targetPort": 9001
+			"targetPort": 8201
 		},
 		{
 			"targetName": "target2",
-			"targetPort": 9002
+			"targetPort": 8202
 		}
 	]
 }
