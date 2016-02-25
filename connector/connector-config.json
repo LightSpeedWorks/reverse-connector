@@ -5,6 +5,7 @@
 	"systemHost": "localhost",
 	"systemPort": 8009,
 	"systemPool": 2,
+	"idleTimeout": 60,
 	"targets": [
 		{
 			"! localAddress": "127.0.0.1",

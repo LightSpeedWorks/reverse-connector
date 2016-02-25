@@ -26,6 +26,9 @@ void function () {
 	assert(Number(configs.systemPort), 'configs.systemPort');
 	assert(Number(configs.systemPool), 'configs.systemPool');
 
+	if (configs.idleTimeout)
+		var idleTimeout = configs.idleTimeout * 1000;
+
 	var myName = '(connector)';
 	var stats = new Statistics(log, myName);
 
@@ -60,6 +63,14 @@ void function () {
 					'Host: ' + configs.systemHost + ':' + configs.systemPort,
 					'', ''].join('\r\n');
 				c.write(msg);
+
+				if (idleTimeout)
+					setTimeout(function () {
+						if (s) return;
+						log.debug('(system) idle timeout disconnecting...');
+						c.destroy();
+						remove();
+					}, idleTimeout);
 
 				c.on('readable', function readable() {
 					var buff = c.read();
