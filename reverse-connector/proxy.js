@@ -31,6 +31,11 @@ void function () {
 	assert(       configs.clients,     'configs.clients');
 
 	var myName = '(proxy)';
+
+	if (configs.clients.length === 0) {
+		log.info(myName, ' proxy not started.');
+		return;
+	}
 	var stats = new Statistics(log, myName);
 
 	var systemNetSvr = net.createServer(
