@@ -25,11 +25,18 @@ void function () {
 	assert(       configs.systemHost,  'configs.systemHost');
 	assert(Number(configs.systemPort), 'configs.systemPort');
 	assert(Number(configs.systemPool), 'configs.systemPool');
+	assert(       configs.targets,     'configs.targets');
 
 	if (configs.idleTimeout)
 		var idleTimeout = configs.idleTimeout * 1000;
 
 	var myName = '(connector)';
+
+	if (configs.targets.length === 0) {
+		log.info(myName, ' connector not started.');
+		return;
+	}
+
 	var stats = new Statistics(log, myName);
 
 	configs.targets.forEach(function (config) {
