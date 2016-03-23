@@ -1,0 +1,22 @@
+{
+	"logLevel": "info",
+	"! localAddress": "127.0.0.1",
+	"systemHost": "localhost",
+	"systemPort": 8109,
+	"systemPool": 2,
+	"idleTimeout": 60,
+	"targets": [
+		{
+			"! localAddress": "127.0.0.1",
+			"targetName": "target1",
+			"targetHost": "localhost",
+			"targetPort": 8201
+		},
+		{
+			"! localAddress": "127.0.0.1",
+			"targetName": "target2",
+			"targetHost": "localhost",
+			"targetPort": 8202
+		}
+	]
+}
