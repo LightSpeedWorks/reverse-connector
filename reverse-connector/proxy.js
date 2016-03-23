@@ -7,7 +7,7 @@ void function () {
 	var path = require('path');
 	var net = require('net');
 	var zlib = require('zlib');
-	var log = require('log-manager').setWriter(new require('log-writer')('proxy-%s.log')).getLogger();
+	var log = (new (require('log-manager'))()).setWriter(new require('log-writer')('proxy-%s.log')).getLogger();
 	var Statistics = require('../lib/statistics');
 	var constants = require('../lib/constants');
 	var TransformXor = require('../lib/transform-xor');
