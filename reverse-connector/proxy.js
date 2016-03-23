@@ -36,6 +36,7 @@ void function () {
 		log.info(myName, ' proxy not started.');
 		return;
 	}
+
 	var stats = new Statistics(log, myName);
 
 	var systemNetSvr = net.createServer(
