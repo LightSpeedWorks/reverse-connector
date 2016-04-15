@@ -33,7 +33,7 @@ void function () {
 	var myName = '(connector)';
 
 	if (configs.targets.length === 0) {
-		log.info(myName, ' connector not started.');
+		log.warn(myName, ' connector not started.');
 		return;
 	}
 

@@ -33,7 +33,7 @@ void function () {
 	var myName = '(proxy)';
 
 	if (configs.clients.length === 0) {
-		log.info(myName, ' proxy not started.');
+		log.warn(myName, ' proxy not started.');
 		return;
 	}
 
