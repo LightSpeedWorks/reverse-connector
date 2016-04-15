@@ -64,6 +64,9 @@ void function () {
 					targetName = words[1].split('?')[1];
 					if (systemPoolSockets[targetName]) {
 
+						// response normal message
+						c.write(constants.firstResponse);
+
 						s = clientPendingSockets[targetName] && clientPendingSockets[targetName].shift();
 						if (s) {
 							s.on('error', error);
@@ -199,20 +202,19 @@ void function () {
 		var x3 = new TransformXor(constants.xor2);
 		var x4 = new TransformXor(constants.xor1);
 
-		c.pipe(s);
-		s.pipe(c);
+		//c.pipe(s);
+		//s.pipe(c);
 
-/*
 		c.pipe(x1);
-		//x1.pipe(x2);
-		zz.unzip(x1, x2);
+		x1.pipe(x2);
+		//zz.unzip(x1, x2);
 		x2.pipe(s);
 
 		s.pipe(x3);
-		//x3.pipe(x4);
-		zz.zip(x3, x4);
+		x3.pipe(x4);
+		//zz.zip(x3, x4);
 		x4.pipe(c);
-*/
+
 	}
 
 }();

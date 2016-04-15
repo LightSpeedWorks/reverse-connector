@@ -55,7 +55,7 @@ void function () {
 			if (systemPoolSockets.length >= configs.systemPool)
 				return;
 
-			var s;
+			var s, initialized;
 			var c = net.connect(
 					{port:configs.systemPort,
 					 host:configs.systemHost,
@@ -68,6 +68,7 @@ void function () {
 					constants.url + '?' + config.targetName,
 					constants.version].join(' '),
 					'Host: ' + configs.systemHost + ':' + configs.systemPort,
+					'Connection: Keep-Alive',
 					'', ''].join('\r\n');
 				c.write(msg);
 
@@ -80,7 +81,15 @@ void function () {
 					}, idleTimeout);
 
 				c.on('readable', function readable() {
-					var buff = c.read();
+					var buff;
+					if (!initialized) {
+						buff = c.read(constants.firstResponse.length);
+						if (buff.toString() === constants.firstResponse)
+							return initialized = true;
+						else
+							return log.fatal('eh?', buff.toString());
+					}
+					buff = c.read();
 					if (!buff) return;
 
 					if (!s) {
@@ -103,23 +112,21 @@ void function () {
 						var x3 = new TransformXor(constants.xor2);
 						var x4 = new TransformXor(constants.xor1);
 
-						s.write(buff);
-						c.pipe(s);
-						s.pipe(c);
+						//s.write(buff);
+						//c.pipe(s);
+						//s.pipe(c);
 
-/*
 						x1.write(buff);
 
 						c.pipe(x1);
-						//x1.pipe(x2);
-						zz.unzip(x1, x2);
+						x1.pipe(x2);
+						//zz.unzip(x1, x2);
 						x2.pipe(s);
 
 						s.pipe(x3);
-						//x3.pipe(x4);
-						zz.zip(x3, x4);
+						x3.pipe(x4);
+						//zz.zip(x3, x4);
 						x4.pipe(c);
-*/
 
 						s.on('error', error);
 						s.on('end', function end() {
